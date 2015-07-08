@@ -13,9 +13,9 @@ RUN rm /var/www/html/index.html
 
 RUN  curl -L http://sourceforge.net/projects/testlink/files/latest/download?source=navbar > testlink.tar.gz
 
-RUN tar xvzf testlink.tar.gz --directory /var/www/html && \
-    mv /var/www/html/testlink*/* /var/www/html/testlink && \
-    rm -r /var/www/html/testlink* && rm testlink.tar.gz
+RUN tar xvzf testlink.tar.gz --directory /var/tmp && \
+    mv /var/tmp/testlink*/* /var/www/html/testlink/ && \
+    rm -r /var/tmp/* && rm testlink.tar.gz
 
 RUN mkdir -p /var/testlink/logs && mkdir -p /var/testlink/upload_area && chown -R www-data /var/testlink
 
