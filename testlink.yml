@@ -1,0 +1,147 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: testlink
+  name: testlink
+  namespace: desarrollo
+spec:
+  type: NodePort
+  ports:
+    - name: http
+      port: 80
+      targetPort: proxy-http
+      protocol: TCP
+      nodePort: 30380
+
+    - name: mariadb
+      port: 3306
+      targetPort: 3306
+      protocol: TCP
+  selector:
+    app: testlink
+---
+kind: Deployment
+apiVersion: extensions/v1beta1
+metadata:
+  labels:
+    app: testlink
+    version: v1.9
+  name: testlink
+  namespace: desarrollo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: testlink
+  template:
+    metadata:
+      labels:
+        app: testlink
+    spec:
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: nas
+      containers:
+          - name: testlinkdb
+            image: mariadb:10.3
+            env:
+              - name: MYSQL_PASSWORD
+                value: "testlink"
+              - name: MYSQL_USER
+                value: "testlink"
+              - name: MYSQL_DATABASE
+                value: "testlink"
+
+            ports:
+              - containerPort: 3306
+            volumeMounts:
+              - mountPath: /var/lib/mysql
+                name: config
+                subPath: testlink/db
+              - mountPath: /docker-entrypoint-initdb.d
+                name: config
+                subPath: testlink/db/initdb
+          - image: ramso/testlink
+            name: testlink
+            volumeMounts:
+              - name: config
+                mountPath: /var/conf
+                subPath: testlink/conf
+            ports:
+              - name: proxy-http
+                containerPort: 80
+                protocol: TCP
+            env:
+              - name: SMTP_HOST
+                value: "smtp.gamil.com"
+              - name: ADMIN_EMAIL
+                value: "webmaster@exmaple.com"
+              - name: FROM_EMAIL
+                value: "webmaster@example.com"
+              - name: RETURN_EMAIL
+                value: "webmaster@example.com"
+              - name: MAIL_PRIORITY
+                value: "5"
+              - name: MAIL_METHOD
+                value: "PHPMAILER_METHOD_SMTP"
+              - name: SMTP_USERNAME
+                value: "smtp@example.com"
+              - name: SMTP_PASSWORD
+                value: "password"
+              - name: SMTP_CONNECTION_MODE
+                value: ""
+              - name: SMTP_PORT
+                value: "25"
+              - name: LDAP_SERVER
+                value: "ldap.example.com"
+              - name: LDAP_PORT
+                value: "389"
+              - name: LDAP_VERSION
+                value: "3"
+              - name: LDAP_ROOT_DN
+                value: "dc=example,dc=com"
+              - name: LDAP_BIND_DN
+                value: "cn=admin,dc=example,dc=com"
+              - name: LDAP_BIND_PASSWORD
+                value: "password"
+              - name: LDAP_TLS
+                value: "false"
+              - name: LDAP_UID
+                value: "uid"
+              - name: SELF_SIGNUP
+                value: "false"
+              - name: LOGO_LOGIN
+                value: "logo.png"
+              - name: LOGO_NAVBAR
+                value: "logon.png"
+              - name: LOGIN_INFO
+                value: ""
+              - name: CONFIG_CHECK
+                value: "SILENT"
+              - name: DB_TYPE
+                value: "mysql"
+              - name: DB_USER
+                value: "testlink"
+              - name: DB_PASS
+                value: "testlink"
+              - name: DB_HOST
+                valueFrom:
+                  fieldRef:
+                      fieldPath: status.podIP
+              - name: DB_NAME
+                value: "testlink"
+              - name: DB_TABLE_PREFIX
+                value: ""
+              - name: ADMIN_USER
+                value: "theboss"
+              - name: ADMIN_EMAIL
+                value: "theboss@example.com"
+              - name: ADMIN_NAME
+                value: "The boss"
+              - name: ADMIN_LAST_NAME
+                value: "Test"
+              - name: ADMIN_LOCALE
+                value: "en_US"
